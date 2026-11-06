@@ -1,851 +1,369 @@
-<!DOCTYPE html>
-<html lang="ru" class="dark">
+<!doctype html>
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TikSaver Pro — Скачать видео из TikTok без водяного знака</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome 6 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f0f11">
+<title>Clipsave — загрузчик видео TikTok</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --bg:#0f0f11; --bg-2:#141417; --surface:#18181c; --surface-2:#1f1f24;
+  --line:#2a2a30; --line-soft:#222227;
+  --text:#ece9e4; --muted:#8b8a90; --dim:#5f5e65;
+  --accent:#c9b99a; --accent-ink:#17150f; --danger:#d08a85; --ok:#9db89a;
+  --radius:16px; --radius-sm:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{color-scheme:dark}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh; min-height:100dvh;
+  line-height:1.5; -webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(900px 420px at 50% -120px,rgba(201,185,154,.07),transparent 70%);
+  background-repeat:no-repeat;
+}
+.wrap{max-width:640px;margin:0 auto;padding:calc(28px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:500;letter-spacing:.01em}
+.brand .mark{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);font-size:13px;background:var(--surface)}
+.brand span{font-size:15px}
+.tag{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.tag i{font-size:11px;color:var(--ok)}
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-                    },
-                    colors: {
-                        surface: {
-                            light: '#FFFFFF',
-                            dark: '#121215'
-                        },
-                        canvas: {
-                            light: '#F4F4F5',
-                            dark: '#09090B'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+h1{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:clamp(34px,8vw,48px);line-height:1.1;letter-spacing:-.02em;margin-bottom:14px}
+h1 em{font-style:italic;color:var(--accent)}
+.lead{color:var(--muted);font-size:15.5px;max-width:460px;margin-bottom:34px}
 
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            letter-spacing: -0.011em;
-        }
-        /* Тонкий минималистичный скроллбар */
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(161, 161, 170, 0.25);
-            border-radius: 9999px;
-        }
-    </style>
+.field{
+  display:flex;align-items:center;gap:6px;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--radius);padding:6px 6px 6px 16px;
+  transition:border-color .2s, box-shadow .2s;
+}
+.field:focus-within{border-color:#4a4538;box-shadow:0 0 0 4px rgba(201,185,154,.07)}
+.field>i.lead-i{color:var(--dim);font-size:14px}
+.field input{
+  flex:1;min-width:0;background:none;border:0;outline:0;color:var(--text);
+  font:inherit;font-size:15px;padding:12px 6px;
+}
+.field input::placeholder{color:var(--dim)}
+.icon-btn{
+  width:40px;height:40px;border-radius:10px;border:0;background:transparent;color:var(--muted);
+  cursor:pointer;display:grid;place-items:center;font-size:14px;transition:.15s;flex:none
+}
+.icon-btn:hover{background:var(--surface-2);color:var(--text)}
+.go{
+  height:46px;padding:0 22px;border:0;border-radius:11px;background:var(--accent);color:var(--accent-ink);
+  font:inherit;font-weight:600;font-size:14.5px;cursor:pointer;display:flex;align-items:center;gap:9px;
+  transition:transform .12s, filter .15s, opacity .15s;flex:none
+}
+.go:hover{filter:brightness(1.06)}
+.go:active{transform:scale(.97)}
+.go:disabled{opacity:.55;cursor:default}
+.hint{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:12.5px;color:var(--dim)}
+.hint span{display:flex;align-items:center;gap:7px}
+.hint i{font-size:11px}
+
+.msg{margin-top:18px;padding:13px 16px;border-radius:var(--radius-sm);border:1px solid #3a2a29;background:#1c1514;color:var(--danger);font-size:14px;display:none;gap:10px;align-items:flex-start}
+.msg.show{display:flex}
+.msg i{margin-top:3px}
+
+.card{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:none;animation:rise .45s cubic-bezier(.2,.7,.2,1)}
+.card.show{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.meta{display:flex;gap:16px;padding:18px}
+.thumb{width:104px;aspect-ratio:3/4;border-radius:12px;background:var(--surface-2) center/cover no-repeat;flex:none;position:relative;border:1px solid var(--line-soft)}
+.thumb .dur{position:absolute;left:6px;bottom:6px;font-size:11px;background:rgba(15,15,17,.78);padding:2px 7px;border-radius:6px;backdrop-filter:blur(6px)}
+.info{min-width:0;display:flex;flex-direction:column;justify-content:space-between;flex:1}
+.author{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.author img{width:24px;height:24px;border-radius:50%;object-fit:cover;background:var(--surface-2)}
+.author b{font-weight:500;font-size:13.5px}
+.author small{color:var(--dim);font-size:12.5px}
+.title{font-size:14.5px;color:#cfccc6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.stats span{display:flex;gap:6px;align-items:center}
+.stats i{font-size:11px;color:var(--dim)}
+
+.sect{border-top:1px solid var(--line-soft);padding:8px 10px 10px}
+.sect-t{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:10px 8px 6px}
+.opt{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:13px 10px;border:0;border-radius:12px;
+  background:transparent;color:var(--text);font:inherit;cursor:pointer;transition:background .15s;position:relative;overflow:hidden
+}
+.opt:hover{background:var(--surface-2)}
+.opt .ic{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);font-size:14px;flex:none;background:var(--bg-2)}
+.opt .tx{flex:1;min-width:0}
+.opt .tx b{display:block;font-weight:500;font-size:14.5px}
+.opt .tx small{color:var(--muted);font-size:12.5px}
+.opt .rt{color:var(--dim);font-size:13px;display:flex;align-items:center;gap:10px;flex:none}
+.opt .badge{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid #3d382c;padding:2px 7px;border-radius:6px}
+.opt .bar{position:absolute;left:0;bottom:0;height:2px;background:var(--accent);width:0;transition:width .15s}
+.opt.busy{pointer-events:none}
+.opt.done .ic{color:var(--ok)}
+
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;padding:6px 8px 8px}
+.photos a{aspect-ratio:1;border-radius:10px;background:var(--surface-2) center/cover;border:1px solid var(--line-soft);display:block;position:relative}
+.photos a::after{content:"\f019";font-family:"Font Awesome 6 Free";font-weight:900;position:absolute;right:6px;bottom:6px;font-size:11px;background:rgba(15,15,17,.8);width:24px;height:24px;border-radius:7px;display:grid;place-items:center}
+
+.recent{margin-top:44px;display:none}
+.recent.show{display:block}
+.recent h3{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:500;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.recent h3 button{background:none;border:0;color:var(--dim);font:inherit;font-size:11.5px;letter-spacing:.06em;cursor:pointer;text-transform:uppercase}
+.recent h3 button:hover{color:var(--muted)}
+.rlist{display:flex;flex-direction:column}
+.ritem{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line-soft);cursor:pointer;color:var(--muted);font-size:13.5px}
+.ritem:hover{color:var(--text)}
+.ritem span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ritem i{font-size:11px;color:var(--dim)}
+
+footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--line-soft);color:var(--dim);font-size:12.5px;line-height:1.65}
+footer i{margin-right:6px}
+
+.spin{width:15px;height:15px;border:2px solid rgba(23,21,15,.25);border-top-color:var(--accent-ink);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--surface-2);border:1px solid var(--line);padding:11px 18px;border-radius:12px;font-size:13.5px;display:flex;gap:9px;align-items:center;pointer-events:none;transition:.3s;z-index:9;max-width:calc(100vw - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast i{color:var(--accent)}
+
+@media (max-width:520px){
+  header{margin-bottom:44px}
+  .wrap{padding-left:16px;padding-right:16px}
+  .field{flex-wrap:wrap;padding:6px}
+  .field>i.lead-i{display:none}
+  .field input{flex:1 1 calc(100% - 50px);padding:12px 10px}
+  .go{width:100%;justify-content:center;height:48px;flex:1 1 100%}
+  .thumb{width:84px}
+  .meta{padding:14px;gap:13px}
+  .opt .rt .sz{display:none}
+}
+</style>
 </head>
-<body class="bg-canvas-light dark:bg-canvas-dark text-zinc-900 dark:text-zinc-100 min-h-screen flex flex-col transition-colors duration-200 selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-zinc-900">
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><div class="mark"><i class="fa-solid fa-arrow-down"></i></div><span>Clipsave</span></div>
+    <div class="tag"><i class="fa-solid fa-circle"></i> Без регистрации</div>
+  </header>
 
-    <!-- Всплывающее уведомление (Toast) -->
-    <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-[92%] max-w-md pointer-events-none"></div>
+  <main>
+    <h1>Видео из TikTok —<br><em>в пару касаний</em></h1>
+    <p class="lead">Вставьте ссылку, выберите качество и сохраните файл на устройство.</p>
 
-    <!-- Минималистичная шапка -->
-    <header class="sticky top-0 z-30 backdrop-blur-xl bg-canvas-light/80 dark:bg-canvas-dark/80 border-b border-zinc-200/80 dark:border-zinc-800/80">
-        <div class="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-            <!-- Логотип -->
-            <a href="#" onclick="resetView(event)" class="flex items-center gap-2.5 group">
-                <div class="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center transition-transform group-active:scale-95">
-                    <i class="fa-brands fa-tiktok text-sm"></i>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="font-semibold text-base tracking-tight">TikSaver</span>
-                    <span class="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">Studio</span>
-                </div>
-            </a>
-
-            <!-- Кнопки управления -->
-            <div class="flex items-center gap-1.5">
-                <button onclick="toggleHistoryModal()" class="relative w-9 h-9 rounded-xl bg-white dark:bg-surface-dark hover:bg-zinc-100 dark:hover:bg-zinc-800/80 text-zinc-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-zinc-800 flex items-center justify-center transition-colors" title="История">
-                    <i class="fa-solid fa-clock-rotate-left text-xs"></i>
-                    <span id="historyBadge" class="hidden absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-semibold flex items-center justify-center">0</span>
-                </button>
-                <button onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-white dark:bg-surface-dark hover:bg-zinc-100 dark:hover:bg-zinc-800/80 text-zinc-600 dark:text-zinc-400 border border-zinc-200/80 dark:border-zinc-800 flex items-center justify-center transition-colors" title="Тема">
-                    <i id="themeIcon" class="fa-regular fa-sun text-xs"></i>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Основной контент -->
-    <main class="flex-1 max-w-lg w-full mx-auto px-4 pt-6 pb-12 flex flex-col gap-4">
-
-        <!-- Блок поиска (Только ввод ссылки и кнопка) -->
-        <section class="bg-white dark:bg-surface-dark rounded-2xl p-3.5 sm:p-4 border border-zinc-200/80 dark:border-zinc-800/90 shadow-sm">
-            <form id="searchForm" onsubmit="handleFormSubmit(event)" class="flex flex-col gap-2.5">
-                
-                <!-- Поле ссылки без наложения текста на кнопки -->
-                <div class="flex items-center gap-2 rounded-xl bg-zinc-100/80 dark:bg-zinc-900/90 border border-zinc-200/70 dark:border-zinc-800 px-3 py-1.5 focus-within:border-zinc-400 dark:focus-within:border-zinc-600 transition-colors">
-                    <i class="fa-solid fa-link text-xs text-zinc-400 shrink-0"></i>
-                    
-                    <input 
-                        type="url" 
-                        id="urlInput" 
-                        placeholder="Вставьте ссылку на TikTok..." 
-                        autocomplete="off"
-                        class="flex-1 min-w-0 py-2 bg-transparent focus:outline-none text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
-                    >
-
-                    <!-- Кнопки справа от текста (не перекрывают текст) -->
-                    <div class="flex items-center gap-1 shrink-0">
-                        <button 
-                            type="button" 
-                            id="clearBtn" 
-                            onclick="clearInput()" 
-                            class="hidden w-7 h-7 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors"
-                            title="Очистить"
-                        >
-                            <i class="fa-solid fa-xmark text-xs"></i>
-                        </button>
-                        <button 
-                            type="button" 
-                            onclick="pasteFromClipboard()" 
-                            class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-medium text-zinc-700 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-700/80 shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
-                        >
-                            <i class="fa-regular fa-clipboard text-[11px] text-zinc-400"></i>
-                            <span>Вставить</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Кнопка поиска -->
-                <button 
-                    type="submit" 
-                    id="submitBtn"
-                    class="w-full h-11 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-950 font-semibold text-sm transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
-                >
-                    <span>Найти видео</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
-                </button>
-            </form>
-        </section>
-
-        <!-- Состояние загрузки -->
-        <section id="loadingSection" class="hidden bg-white dark:bg-surface-dark rounded-2xl p-6 border border-zinc-200/80 dark:border-zinc-800/90 text-center">
-            <div class="w-8 h-8 mx-auto mb-3 rounded-full border-2 border-zinc-300 dark:border-zinc-700 border-t-zinc-900 dark:border-t-zinc-100 animate-spin"></div>
-            <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Обработка ссылки и получение потоков...</p>
-        </section>
-
-        <!-- Карточка результата (появляется после поиска) -->
-        <section id="resultSection" class="hidden bg-white dark:bg-surface-dark rounded-2xl p-4 border border-zinc-200/80 dark:border-zinc-800/90 shadow-sm flex flex-col gap-4">
-            
-            <!-- Верхняя часть: Превью + Метаданные -->
-            <div class="flex gap-3.5 items-start">
-                <!-- Кастомное чистое превью без громоздкого стандартного плеера -->
-                <div onclick="toggleVideoPlayback()" class="relative rounded-xl overflow-hidden bg-zinc-950 w-24 sm:w-28 aspect-[9/16] shrink-0 border border-zinc-200/20 dark:border-zinc-800 cursor-pointer group">
-                    <video 
-                        id="videoPreview" 
-                        class="w-full h-full object-cover" 
-                        playsinline 
-                        loop
-                        preload="metadata"
-                    ></video>
-                    
-                    <!-- Кнопка Play/Pause по центру -->
-                    <div id="playOverlay" class="absolute inset-0 bg-black/25 flex items-center justify-center transition-opacity">
-                        <div class="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                            <i id="playOverlayIcon" class="fa-solid fa-play text-xs ml-0.5"></i>
-                        </div>
-                    </div>
-
-                    <!-- Длительность -->
-                    <div class="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-white text-[10px] font-medium tabular-nums pointer-events-none">
-                        <span id="videoDuration">00:15</span>
-                    </div>
-                </div>
-
-                <!-- Информация о ролике -->
-                <div class="flex-1 min-w-0 flex flex-col justify-between self-stretch py-0.5">
-                    <div>
-                        <!-- Автор -->
-                        <div class="flex items-center justify-between gap-2">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <img 
-                                    id="authorAvatar" 
-                                    src="https://placehold.co/80x80/18181b/a1a1aa?text=TT" 
-                                    alt="Avatar" 
-                                    onerror="this.src='https://placehold.co/80x80/18181b/a1a1aa?text=TT'"
-                                    class="w-8 h-8 rounded-full object-cover bg-zinc-800 shrink-0"
-                                >
-                                <div class="min-w-0">
-                                    <h2 id="authorName" class="font-semibold text-sm text-zinc-900 dark:text-zinc-100 truncate leading-tight">Автор</h2>
-                                    <p id="authorHandle" class="text-xs text-zinc-400 dark:text-zinc-500 truncate">@username</p>
-                                </div>
-                            </div>
-                            <a id="originalLinkBtn" href="#" target="_blank" rel="noopener noreferrer" class="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800/80 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 flex items-center justify-center text-xs transition-colors shrink-0" title="Открыть оригинал">
-                                <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
-                            </a>
-                        </div>
-
-                        <!-- Описание -->
-                        <p id="videoTitle" class="text-xs text-zinc-600 dark:text-zinc-400 mt-2.5 line-clamp-2 leading-relaxed">
-                            Описание видео...
-                        </p>
-                    </div>
-
-                    <!-- Лаконичная строка статистики без переносов -->
-                    <div class="flex items-center gap-3 pt-2.5 mt-2 border-t border-zinc-100 dark:border-zinc-800/80 text-xs text-zinc-500 dark:text-zinc-400 tabular-nums">
-                        <span class="flex items-center gap-1" title="Просмотры">
-                            <i class="fa-solid fa-play text-[10px] text-zinc-400"></i>
-                            <span id="statViews" class="font-medium text-zinc-700 dark:text-zinc-300">0</span>
-                        </span>
-                        <span class="flex items-center gap-1" title="Лайки">
-                            <i class="fa-solid fa-heart text-[10px] text-zinc-400"></i>
-                            <span id="statLikes" class="font-medium text-zinc-700 dark:text-zinc-300">0</span>
-                        </span>
-                        <span class="flex items-center gap-1" title="Комментарии">
-                            <i class="fa-solid fa-comment text-[10px] text-zinc-400"></i>
-                            <span id="statComments" class="font-medium text-zinc-700 dark:text-zinc-300">0</span>
-                        </span>
-                        <span class="flex items-center gap-1" title="Репосты">
-                            <i class="fa-solid fa-share text-[10px] text-zinc-400"></i>
-                            <span id="statShares" class="font-medium text-zinc-700 dark:text-zinc-300">0</span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Сетка 2x2 выбора качества (Квадратные закругленные карточки) -->
-            <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[11px] font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Выберите качество</span>
-                </div>
-                <div id="qualityOptionsList" class="grid grid-cols-2 gap-2">
-                    <!-- Карточки 2x2 рендерятся динамически -->
-                </div>
-            </div>
-
-            <!-- Прогресс-бар скачивания -->
-            <div id="downloadProgressBox" class="hidden p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800">
-                <div class="flex items-center justify-between text-xs font-medium mb-1.5">
-                    <span id="downloadStatusText" class="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
-                        <i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Загрузка файла...
-                    </span>
-                    <span id="downloadPercentText" class="tabular-nums text-zinc-500">0%</span>
-                </div>
-                <div class="w-full h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
-                    <div id="downloadProgressBar" class="h-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-200" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Кнопки действия -->
-            <div class="flex gap-2">
-                <button 
-                    type="button" 
-                    id="mainDownloadBtn" 
-                    onclick="startSelectedDownload()" 
-                    class="flex-1 h-11 px-4 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-950 font-semibold text-sm transition-all active:scale-[0.99] flex items-center justify-center gap-2 truncate"
-                >
-                    <i class="fa-solid fa-arrow-down text-xs"></i>
-                    <span id="mainDownloadBtnText" class="truncate">Скачать HD</span>
-                </button>
-                <button 
-                    type="button" 
-                    onclick="copyDirectLink()" 
-                    class="w-11 h-11 rounded-xl bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200/70 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-800 transition-colors flex items-center justify-center shrink-0"
-                    title="Скопировать прямую ссылку"
-                >
-                    <i class="fa-regular fa-copy text-xs"></i>
-                </button>
-            </div>
-
-        </section>
-
-    </main>
-
-    <!-- Модальное окно Истории -->
-    <div id="historyModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4">
-        <div class="bg-white dark:bg-surface-dark w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl max-h-[75vh] flex flex-col overflow-hidden">
-            <div class="px-4 py-3.5 border-b border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between">
-                <span class="font-semibold text-sm">Недавние видео</span>
-                <div class="flex items-center gap-2">
-                    <button onclick="clearHistory()" class="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 px-2 py-1 transition-colors">Очистить</button>
-                    <button onclick="toggleHistoryModal()" class="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center">
-                        <i class="fa-solid fa-xmark text-xs"></i>
-                    </button>
-                </div>
-            </div>
-            <div id="historyList" class="p-3 overflow-y-auto space-y-1.5 flex-1"></div>
-        </div>
+    <form class="field" id="form" autocomplete="off">
+      <i class="fa-solid fa-link lead-i"></i>
+      <input id="url" type="url" inputmode="url" placeholder="https://www.tiktok.com/@user/video/…" aria-label="Ссылка на видео" spellcheck="false">
+      <button type="button" class="icon-btn" id="paste" title="Вставить"><i class="fa-regular fa-paste"></i></button>
+      <button type="button" class="icon-btn" id="clear" title="Очистить" style="display:none"><i class="fa-solid fa-xmark"></i></button>
+      <button class="go" id="go" type="submit"><i class="fa-solid fa-magnifying-glass"></i><span>Найти</span></button>
+    </form>
+    <div class="hint">
+      <span><i class="fa-solid fa-film"></i> HD и SD</span>
+      <span><i class="fa-solid fa-droplet-slash"></i> Без водяного знака</span>
+      <span><i class="fa-solid fa-music"></i> Только звук MP3</span>
     </div>
 
-    <script>
-        // ==========================================
-        // СОСТОЯНИЕ ПРИЛОЖЕНИЯ
-        // ==========================================
-        let currentVideoData = null;
-        let selectedStreamKey = 'hd';
-        let isDownloading = false;
-        let sessionHistory = [];
-
-        // ==========================================
-        // ИНИЦИАЛИЗАЦИЯ
-        // ==========================================
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlInput = document.getElementById('urlInput');
-            const clearBtn = document.getElementById('clearBtn');
-            const player = document.getElementById('videoPreview');
-
-            urlInput.addEventListener('input', () => {
-                clearBtn.classList.toggle('hidden', urlInput.value.trim().length === 0);
-            });
-
-            player.addEventListener('play', () => updatePlayOverlay(true));
-            player.addEventListener('pause', () => updatePlayOverlay(false));
-            player.addEventListener('ended', () => updatePlayOverlay(false));
-
-            updateHistoryBadge();
-        });
-
-        // ==========================================
-        // УВЕДОМЛЕНИЯ (TOAST)
-        // ==========================================
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-
-            const icons = {
-                success: 'fa-check text-emerald-400',
-                error: 'fa-circle-exclamation text-rose-400',
-                info: 'fa-info-circle text-zinc-400'
-            };
-
-            toast.className = 'pointer-events-auto flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-zinc-800 bg-zinc-900/95 text-zinc-100 shadow-lg text-xs font-medium transition-all duration-200';
-            toast.innerHTML = `
-                <i class="fa-solid ${icons[type] || icons.info} text-xs shrink-0"></i>
-                <span class="flex-1">${message}</span>
-            `;
-
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-6px)';
-                setTimeout(() => toast.remove(), 200);
-            }, 2600);
-        }
-
-        // ==========================================
-        // ПЕРЕКЛЮЧЕНИЕ ТЕМЫ
-        // ==========================================
-        function toggleTheme() {
-            const html = document.documentElement;
-            const icon = document.getElementById('themeIcon');
-            html.classList.toggle('dark');
-
-            if (html.classList.contains('dark')) {
-                icon.className = 'fa-regular fa-sun text-xs';
-            } else {
-                icon.className = 'fa-solid fa-moon text-xs';
-            }
-        }
-
-        // ==========================================
-        // ПОЛЕ ВВОДА И ПЛЕЕР ПРЕВЬЮ
-        // ==========================================
-        function clearInput() {
-            const input = document.getElementById('urlInput');
-            input.value = '';
-            document.getElementById('clearBtn').classList.add('hidden');
-            input.focus();
-        }
-
-        async function pasteFromClipboard() {
-            const input = document.getElementById('urlInput');
-            try {
-                if (navigator.clipboard && navigator.clipboard.readText) {
-                    const text = await navigator.clipboard.readText();
-                    if (text) {
-                        input.value = text.trim();
-                        document.getElementById('clearBtn').classList.remove('hidden');
-                        showToast('Ссылка вставлена', 'success');
-                        return;
-                    }
-                }
-                throw new Error('Restricted');
-            } catch (err) {
-                input.focus();
-                showToast('Нажмите и удерживайте поле для вставки', 'info');
-            }
-        }
-
-        function toggleVideoPlayback() {
-            const player = document.getElementById('videoPreview');
-            if (!player.src) return;
-            if (player.paused) {
-                player.play().catch(() => {});
-            } else {
-                player.pause();
-            }
-        }
-
-        function updatePlayOverlay(isPlaying) {
-            const overlay = document.getElementById('playOverlay');
-            const icon = document.getElementById('playOverlayIcon');
-            if (isPlaying) {
-                overlay.classList.add('opacity-0', 'hover:opacity-100');
-                icon.className = 'fa-solid fa-pause text-xs';
-            } else {
-                overlay.classList.remove('opacity-0', 'hover:opacity-100');
-                icon.className = 'fa-solid fa-play text-xs ml-0.5';
-            }
-        }
-
-        function resetView(e) {
-            if (e) e.preventDefault();
-            const player = document.getElementById('videoPreview');
-            player.pause();
-            clearInput();
-            document.getElementById('resultSection').classList.add('hidden');
-            document.getElementById('loadingSection').classList.add('hidden');
-        }
-
-        // ==========================================
-        // ПОИСК ВИДЕО ЧЕРЕЗ API
-        // ==========================================
-        function isValidTikTokUrl(url) {
-            return /(tiktok\.com|douyin\.com)/i.test(url);
-        }
-
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            const rawInput = document.getElementById('urlInput').value.trim();
-
-            if (!rawInput) {
-                showToast('Вставьте ссылку на видео', 'error');
-                return;
-            }
-
-            const urlMatch = rawInput.match(/https?:\/\/[^\s]+/i);
-            const cleanUrl = urlMatch ? urlMatch[0] : rawInput;
-
-            if (!isValidTikTokUrl(cleanUrl)) {
-                showToast('Введите корректную ссылку TikTok', 'error');
-                return;
-            }
-
-            fetchTikTokVideo(cleanUrl);
-        }
-
-        async function fetchTikTokVideo(videoUrl) {
-            const loadingSec = document.getElementById('loadingSection');
-            const resultSec = document.getElementById('resultSection');
-            const submitBtn = document.getElementById('submitBtn');
-            const player = document.getElementById('videoPreview');
-
-            player.pause();
-            loadingSec.classList.remove('hidden');
-            resultSec.classList.add('hidden');
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-50');
-
-            try {
-                const apiUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(videoUrl)}&hd=1`;
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Ошибка соединения (${response.status})`);
-                }
-
-                const json = await response.json();
-
-                if (json && json.code === 0 && json.data) {
-                    const normalized = normalizeApiData(json.data, videoUrl);
-                    renderVideoResult(normalized);
-                    saveToHistory(normalized);
-                } else {
-                    throw new Error((json && json.msg) ? json.msg : 'Видео не найдено или недоступно');
-                }
-            } catch (error) {
-                showToast(error.message || 'Не удалось обработать ссылку', 'error');
-            } finally {
-                loadingSec.classList.add('hidden');
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50');
-            }
-        }
-
-        function normalizeApiData(data, sourceUrl) {
-            const resolveUrl = (u) => {
-                if (!u) return '';
-                if (u.startsWith('http')) return u;
-                return `https://www.tikwm.com${u}`;
-            };
-
-            const playUrl = resolveUrl(data.play);
-            const hdUrl = resolveUrl(data.hdplay) || playUrl;
-            const wmUrl = resolveUrl(data.wmplay) || playUrl;
-            const musicUrl = resolveUrl(data.music || (data.music_info && data.music_info.play));
-            const coverUrl = resolveUrl(data.origin_cover || data.cover);
-
-            return {
-                id: data.id || String(Date.now()),
-                sourceUrl: sourceUrl,
-                title: data.title || 'Без описания',
-                duration: data.duration || 0,
-                cover: coverUrl,
-                author: {
-                    nickname: (data.author && data.author.nickname) ? data.author.nickname : 'TikTok User',
-                    unique_id: (data.author && data.author.unique_id) ? data.author.unique_id : 'user',
-                    avatar: resolveUrl(data.author && data.author.avatar)
-                },
-                stats: {
-                    views: data.play_count || 0,
-                    likes: data.digg_count || 0,
-                    comments: data.comment_count || 0,
-                    shares: data.share_count || 0
-                },
-                streams: {
-                    hd: {
-                        key: 'hd',
-                        label: 'HD 1080p',
-                        sub: 'Без водяного знака',
-                        icon: 'fa-solid fa-film',
-                        url: hdUrl,
-                        size: data.hd_size || data.size || 0,
-                        ext: 'mp4'
-                    },
-                    sd: {
-                        key: 'sd',
-                        label: 'SD 720p',
-                        sub: 'Без знака • Быстрое',
-                        icon: 'fa-solid fa-compress',
-                        url: playUrl,
-                        size: data.size || 0,
-                        ext: 'mp4'
-                    },
-                    wm: {
-                        key: 'wm',
-                        label: 'Оригинал',
-                        sub: 'С логотипом TikTok',
-                        icon: 'fa-brands fa-tiktok',
-                        url: wmUrl,
-                        size: data.wm_size || data.size || 0,
-                        ext: 'mp4'
-                    },
-                    mp3: {
-                        key: 'mp3',
-                        label: 'Аудио MP3',
-                        sub: 'Только звук',
-                        icon: 'fa-solid fa-music',
-                        url: musicUrl,
-                        size: 0,
-                        ext: 'mp3'
-                    }
-                }
-            };
-        }
-
-        // ==========================================
-        // РЕНДЕР РЕЗУЛЬТАТА И ПЛИТОК КАЧЕСТВА 2x2
-        // ==========================================
-        function renderVideoResult(video) {
-            currentVideoData = video;
-
-            document.getElementById('authorAvatar').src = video.author.avatar || 'https://placehold.co/80x80/18181b/a1a1aa?text=TT';
-            document.getElementById('authorName').textContent = video.author.nickname;
-            document.getElementById('authorHandle').textContent = `@${video.author.unique_id}`;
-            document.getElementById('videoTitle').textContent = video.title;
-            document.getElementById('originalLinkBtn').href = video.sourceUrl;
-
-            const mins = Math.floor(video.duration / 60).toString().padStart(2, '0');
-            const secs = (video.duration % 60).toString().padStart(2, '0');
-            document.getElementById('videoDuration').textContent = `${mins}:${secs}`;
-
-            document.getElementById('statViews').textContent = formatCompactNumber(video.stats.views);
-            document.getElementById('statLikes').textContent = formatCompactNumber(video.stats.likes);
-            document.getElementById('statComments').textContent = formatCompactNumber(video.stats.comments);
-            document.getElementById('statShares').textContent = formatCompactNumber(video.stats.shares);
-
-            const player = document.getElementById('videoPreview');
-            player.poster = video.cover;
-            player.src = video.streams.sd.url || video.streams.hd.url;
-            updatePlayOverlay(false);
-
-            renderQualityOptions();
-            selectQualityOption('hd');
-
-            const resultSec = document.getElementById('resultSection');
-            resultSec.classList.remove('hidden');
-        }
-
-        function renderQualityOptions() {
-            const container = document.getElementById('qualityOptionsList');
-            container.innerHTML = '';
-
-            Object.values(currentVideoData.streams).forEach(stream => {
-                if (!stream.url) return;
-
-                const sizeStr = stream.size ? formatBytes(stream.size) : stream.ext.toUpperCase();
-                const card = document.createElement('button');
-                card.type = 'button';
-                card.id = `qCard_${stream.key}`;
-                card.onclick = () => selectQualityOption(stream.key);
-
-                card.innerHTML = `
-                    <div class="flex items-center justify-between w-full">
-                        <div class="w-7 h-7 rounded-lg bg-zinc-200/70 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0">
-                            <i class="${stream.icon} text-xs"></i>
-                        </div>
-                        <span class="text-[11px] font-medium tabular-nums text-zinc-500 dark:text-zinc-400">
-                            ${sizeStr}
-                        </span>
-                    </div>
-                    <div class="mt-2.5 text-left w-full">
-                        <div class="font-semibold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 leading-tight truncate">${stream.label}</div>
-                        <div class="text-[11px] text-zinc-400 dark:text-zinc-500 truncate mt-0.5">${stream.sub}</div>
-                    </div>
-                `;
-
-                container.appendChild(card);
-            });
-        }
-
-        function selectQualityOption(key) {
-            if (!currentVideoData || !currentVideoData.streams[key]) {
-                key = 'hd';
-            }
-            selectedStreamKey = key;
-            const stream = currentVideoData.streams[key];
-
-            document.querySelectorAll('#qualityOptionsList > button').forEach(card => {
-                const isSelected = card.id === `qCard_${key}`;
-                if (isSelected) {
-                    card.className = 'p-3 rounded-xl border border-zinc-900 dark:border-zinc-100 bg-zinc-900/[0.03] dark:bg-white/[0.04] transition-all flex flex-col justify-between min-h-[76px] ring-1 ring-zinc-900 dark:ring-zinc-100';
-                } else {
-                    card.className = 'p-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800/90 bg-zinc-50/50 dark:bg-zinc-900/40 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex flex-col justify-between min-h-[76px]';
-                }
-            });
-
-            const sizePart = stream.size ? ` · ${formatBytes(stream.size)}` : '';
-            document.getElementById('mainDownloadBtnText').textContent = `Скачать ${stream.label}${sizePart}`;
-        }
-
-        // ==========================================
-        // СКАЧИВАНИЕ ФАЙЛА
-        // ==========================================
-        async function startSelectedDownload() {
-            if (!currentVideoData || isDownloading) return;
-
-            const stream = currentVideoData.streams[selectedStreamKey];
-            if (!stream || !stream.url) {
-                showToast('Выбранный формат недоступен', 'error');
-                return;
-            }
-
-            const progressBox = document.getElementById('downloadProgressBox');
-            const progressBar = document.getElementById('downloadProgressBar');
-            const percentText = document.getElementById('downloadPercentText');
-            const statusText = document.getElementById('downloadStatusText');
-            const mainBtn = document.getElementById('mainDownloadBtn');
-
-            isDownloading = true;
-            mainBtn.disabled = true;
-            mainBtn.classList.add('opacity-50');
-            progressBox.classList.remove('hidden');
-            progressBar.style.width = '4%';
-            percentText.textContent = '0%';
-            statusText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Сохранение файла...';
-
-            const safeAuthor = (currentVideoData.author.unique_id || 'tiktok').replace(/[^a-zA-Z0-9_-]/g, '');
-            const fileName = `TikSaver_${safeAuthor}_${currentVideoData.id}_${selectedStreamKey}.${stream.ext}`;
-
-            try {
-                const response = await fetch(stream.url);
-                if (!response.ok) throw new Error('CDN Error');
-
-                const contentLength = response.headers.get('content-length');
-                const totalBytes = contentLength ? parseInt(contentLength, 10) : (stream.size || 0);
-
-                if (response.body && totalBytes > 0) {
-                    const reader = response.body.getReader();
-                    let receivedLength = 0;
-                    const chunks = [];
-
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        chunks.push(value);
-                        receivedLength += value.length;
-
-                        const percent = Math.min(99, Math.round((receivedLength / totalBytes) * 100));
-                        progressBar.style.width = `${percent}%`;
-                        percentText.textContent = `${percent}%`;
-                    }
-
-                    const mimeType = stream.ext === 'mp3' ? 'audio/mpeg' : 'video/mp4';
-                    const blob = new Blob(chunks, { type: mimeType });
-                    triggerBrowserDownload(blob, fileName);
-                } else {
-                    const blob = await response.blob();
-                    triggerBrowserDownload(blob, fileName);
-                }
-
-                progressBar.style.width = '100%';
-                percentText.textContent = '100%';
-                statusText.innerHTML = '<i class="fa-solid fa-check text-emerald-500 text-xs"></i> Готово';
-                showToast('Файл сохранен', 'success');
-            } catch (err) {
-                const a = document.createElement('a');
-                a.href = stream.url;
-                a.target = '_blank';
-                a.rel = 'noopener noreferrer';
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-
-                progressBar.style.width = '100%';
-                percentText.textContent = '100%';
-                statusText.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> Открыта прямая загрузка';
-            } finally {
-                isDownloading = false;
-                mainBtn.disabled = false;
-                mainBtn.classList.remove('opacity-50');
-                setTimeout(() => {
-                    progressBox.classList.add('hidden');
-                }, 3000);
-            }
-        }
-
-        function triggerBrowserDownload(blob, fileName) {
-            const blobUrl = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-        }
-
-        function copyDirectLink() {
-            if (!currentVideoData) return;
-            const stream = currentVideoData.streams[selectedStreamKey];
-            if (!stream || !stream.url) return;
-
-            const tempInput = document.createElement('textarea');
-            tempInput.value = stream.url;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            tempInput.remove();
-
-            showToast('Ссылка скопирована', 'success');
-        }
-
-        // ==========================================
-        // ИСТОРИЯ СЕССИИ
-        // ==========================================
-        function saveToHistory(video) {
-            sessionHistory = sessionHistory.filter(item => item.id !== video.id);
-            sessionHistory.unshift({
-                id: video.id,
-                sourceUrl: video.sourceUrl,
-                title: video.title,
-                cover: video.cover,
-                author: video.author.unique_id
-            });
-            sessionHistory = sessionHistory.slice(0, 15);
-            updateHistoryBadge();
-        }
-
-        function updateHistoryBadge() {
-            const badge = document.getElementById('historyBadge');
-            if (sessionHistory.length > 0) {
-                badge.textContent = sessionHistory.length;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-
-        function toggleHistoryModal() {
-            const modal = document.getElementById('historyModal');
-            const isHidden = modal.classList.contains('hidden');
-            if (isHidden) {
-                renderHistoryList();
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            } else {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-        }
-
-        function renderHistoryList() {
-            const container = document.getElementById('historyList');
-            if (sessionHistory.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-8 text-zinc-400">
-                        <p class="text-xs">Список пуст</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = sessionHistory.map(item => `
-                <div class="flex items-center gap-3 p-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800">
-                    <img src="${item.cover}" onerror="this.src='https://placehold.co/80x80/18181b/a1a1aa?text=TT'" class="w-10 h-12 rounded-lg object-cover shrink-0 bg-zinc-950">
-                    <div class="min-w-0 flex-1">
-                        <div class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">@${item.author}</div>
-                        <div class="text-[11px] text-zinc-500 truncate">${item.title}</div>
-                    </div>
-                    <button onclick="reloadFromHistory('${item.sourceUrl}')" class="px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium shrink-0">
-                        Открыть
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function reloadFromHistory(url) {
-            toggleHistoryModal();
-            const input = document.getElementById('urlInput');
-            input.value = url;
-            document.getElementById('clearBtn').classList.remove('hidden');
-            fetchTikTokVideo(url);
-        }
-
-        function clearHistory() {
-            sessionHistory = [];
-            updateHistoryBadge();
-            renderHistoryList();
-            showToast('История очищена', 'info');
-        }
-
-        function formatBytes(bytes) {
-            if (!bytes || bytes <= 0) return '';
-            const mb = bytes / (1024 * 1024);
-            return `${mb.toFixed(1)} МБ`;
-        }
-
-        function formatCompactNumber(num) {
-            if (!num) return '0';
-            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-            return String(num);
-        }
-    </script>
+    <div class="msg" id="msg"><i class="fa-solid fa-circle-exclamation"></i><div id="msgText"></div></div>
+
+    <section class="card" id="card">
+      <div class="meta">
+        <div class="thumb" id="thumb"><span class="dur" id="dur"></span></div>
+        <div class="info">
+          <div>
+            <div class="author"><img id="ava" alt=""><div><b id="aname"></b> <small id="ahandle"></small></div></div>
+            <div class="title" id="title"></div>
+          </div>
+          <div class="stats" id="stats"></div>
+        </div>
+      </div>
+      <div class="sect" id="opts"></div>
+      <div class="sect" id="photoSect" style="display:none">
+        <div class="sect-t">Фотографии</div>
+        <div class="photos" id="photos"></div>
+      </div>
+    </section>
+
+    <section class="recent" id="recent">
+      <h3>Недавние <button id="clearHist" type="button">Очистить</button></h3>
+      <div class="rlist" id="rlist"></div>
+    </section>
+  </main>
+
+  <footer>
+    <i class="fa-regular fa-circle-check"></i>Сервис не хранит файлы и ссылки на сервере — запросы идут напрямую из вашего браузера.<br>
+    Скачивайте только свой контент или материалы, на использование которых у вас есть разрешение автора.
+  </footer>
+</div>
+<div class="toast" id="toast"><i class="fa-solid fa-circle-info"></i><span></span></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const API = 'https://www.tikwm.com';
+  // Резервные CORS-прокси, если прямой запрос заблокирован браузером
+  const PROXIES = [u => u, u => 'https://corsproxy.io/?' + encodeURIComponent(u), u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u)];
+  const urlIn = $('url'), go = $('go'), form = $('form');
+  let lastCall = 0;
+
+  const isTikTok = s => /^https?:\/\/([a-z0-9-]+\.)*(tiktok\.com|tiktokv\.com)\//i.test(s.trim());
+  const abs = u => !u ? '' : u.startsWith('//') ? 'https:' + u : u.startsWith('/') ? API + u : u;
+  const fmtN = n => n >= 1e6 ? (n/1e6).toFixed(1).replace('.0','')+'M' : n >= 1e3 ? (n/1e3).toFixed(1).replace('.0','')+'K' : String(n||0);
+  const fmtS = b => !b ? '' : b > 1048576 ? (b/1048576).toFixed(1)+' МБ' : Math.max(1,Math.round(b/1024))+' КБ';
+  const fmtD = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  let tt;
+  function toast(t, icon='fa-circle-info'){
+    const el = $('toast'); el.querySelector('span').textContent = t;
+    el.querySelector('i').className = 'fa-solid ' + icon;
+    el.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('show'), 2600);
+  }
+  function showErr(t){ $('msgText').textContent = t; $('msg').classList.add('show'); $('card').classList.remove('show'); }
+  function hideErr(){ $('msg').classList.remove('show'); }
+
+  function sync(){ $('clear').style.display = urlIn.value ? 'grid' : 'none'; $('paste').style.display = urlIn.value ? 'none' : 'grid'; }
+  urlIn.addEventListener('input', sync); sync();
+  $('clear').onclick = () => { urlIn.value=''; sync(); urlIn.focus(); hideErr(); $('card').classList.remove('show'); };
+  $('paste').onclick = async () => {
+    try {
+      const t = await navigator.clipboard.readText();
+      if (t) { urlIn.value = t.trim(); sync(); if (isTikTok(t)) form.requestSubmit(); }
+    } catch { toast('Не удалось получить доступ к буферу — вставьте вручную', 'fa-triangle-exclamation'); urlIn.focus(); }
+  };
+
+  async function apiFetch(link){
+    const target = `${API}/api/?hd=1&url=${encodeURIComponent(link)}`;
+    let lastErr;
+    for (const p of PROXIES){
+      try {
+        const r = await fetch(p(target), {headers:{Accept:'application/json'}});
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return await r.json();
+      } catch(e){ lastErr = e; }
+    }
+    throw lastErr;
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault(); hideErr();
+    const link = urlIn.value.trim();
+    if (!link) return showErr('Вставьте ссылку на видео TikTok.');
+    if (!isTikTok(link)) return showErr('Это не похоже на ссылку TikTok. Пример: https://vm.tiktok.com/XXXXXXX/');
+
+    const wait = 1100 - (Date.now() - lastCall);
+    go.disabled = true; go.innerHTML = '<div class="spin"></div><span>Ищем…</span>';
+    try {
+      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      lastCall = Date.now();
+      const j = await apiFetch(link);
+      if (j.code !== 0 || !j.data) throw new Error(j.msg || 'Видео не найдено');
+      render(j.data); addHistory(link);
+    } catch(err){
+      const m = String(err.message || err);
+      showErr(/limit/i.test(m) ? 'Слишком частые запросы. Подождите секунду и повторите.' :
+              /fetch|network|HTTP/i.test(m) ? 'Не удалось связаться с сервисом. Проверьте интернет и попробуйте ещё раз.' :
+              'Не удалось получить видео: ' + m + '. Возможно, оно приватное или удалено.');
+    } finally {
+      go.disabled = false; go.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>Найти</span>';
+    }
+  });
+
+  function render(d){
+    $('thumb').style.backgroundImage = `url("${abs(d.origin_cover || d.cover)}")`;
+    $('dur').textContent = d.duration ? fmtD(d.duration) : ''; $('dur').style.display = d.duration ? '' : 'none';
+    $('ava').src = abs(d.author?.avatar);
+    $('aname').textContent = d.author?.nickname || 'Автор';
+    $('ahandle').textContent = d.author?.unique_id ? '@' + d.author.unique_id : '';
+    $('title').textContent = d.title || 'Без описания';
+    $('stats').innerHTML =
+      `<span><i class="fa-regular fa-eye"></i>${fmtN(d.play_count)}</span>` +
+      `<span><i class="fa-regular fa-heart"></i>${fmtN(d.digg_count)}</span>` +
+      `<span><i class="fa-regular fa-comment"></i>${fmtN(d.comment_count)}</span>` +
+      `<span><i class="fa-solid fa-share"></i>${fmtN(d.share_count)}</span>`;
+
+    const base = `tiktok_${(d.author?.unique_id || 'video')}_${d.id}`;
+    const items = [];
+    const hasVideo = !(d.images && d.images.length);
+    if (hasVideo){
+      if (d.hdplay) items.push({ic:'fa-wand-magic-sparkles', t:'Максимальное качество', s:'HD · MP4 · без водяного знака', badge:'HD', size:d.hd_size, url:abs(d.hdplay), name:base+'_hd.mp4'});
+      if (d.play)   items.push({ic:'fa-film', t:'Стандартное качество', s:'SD · MP4 · без водяного знака', size:d.size, url:abs(d.play), name:base+'_sd.mp4'});
+      if (d.wmplay) items.push({ic:'fa-stamp', t:'С водяным знаком', s:'MP4 · оригинальный файл TikTok', size:d.wm_size, url:abs(d.wmplay), name:base+'_wm.mp4'});
+    }
+    if (d.music) items.push({ic:'fa-music', t:'Только звук', s: (d.music_info?.title || 'Аудиодорожка') + ' · MP3', url:abs(d.music), name:base+'_audio.mp3'});
+
+    const box = $('opts');
+    box.innerHTML = '<div class="sect-t">Формат загрузки</div>';
+    items.forEach(it => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'opt';
+      b.innerHTML = `<div class="ic"><i class="fa-solid ${it.ic}"></i></div>
+        <div class="tx"><b>${esc(it.t)}</b><small>${esc(it.s)}</small></div>
+        <div class="rt">${it.badge ? `<span class="badge">${it.badge}</span>` : ''}<span class="sz">${fmtS(it.size)}</span><i class="fa-solid fa-download"></i></div>
+        <div class="bar"></div>`;
+      b.onclick = () => download(b, it);
+      box.appendChild(b);
+    });
+
+    const ps = $('photoSect');
+    if (d.images && d.images.length){
+      $('photos').innerHTML = d.images.map((u,i) => `<a href="${esc(abs(u))}" target="_blank" rel="noopener" download="${esc(base)}_${i+1}.jpg" style="background-image:url('${esc(abs(u))}')" aria-label="Фото ${i+1}"></a>`).join('');
+      ps.style.display = '';
+    } else ps.style.display = 'none';
+
+    $('card').classList.add('show');
+    $('card').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  async function download(btn, it){
+    const bar = btn.querySelector('.bar'), icon = btn.querySelector('.rt i');
+    btn.classList.add('busy'); icon.className = 'fa-solid fa-circle-notch fa-spin';
+    try {
+      const r = await fetch(it.url);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const total = +r.headers.get('content-length') || it.size || 0;
+      const reader = r.body.getReader(); const chunks = []; let got = 0;
+      for(;;){
+        const {done, value} = await reader.read(); if (done) break;
+        chunks.push(value); got += value.length;
+        if (total) bar.style.width = Math.min(100, got/total*100) + '%';
+      }
+      const blob = new Blob(chunks, {type: it.name.endsWith('.mp3') ? 'audio/mpeg' : 'video/mp4'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = it.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+      bar.style.width = '100%'; btn.classList.add('done'); icon.className = 'fa-solid fa-check';
+      toast('Файл сохранён', 'fa-circle-check');
+    } catch {
+      // браузер не разрешил прямую загрузку — открываем файл напрямую
+      const a = document.createElement('a'); a.href = it.url; a.target = '_blank'; a.rel = 'noopener'; a.download = it.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      icon.className = 'fa-solid fa-download';
+      toast('Открыли файл в новой вкладке — сохраните его оттуда', 'fa-arrow-up-right-from-square');
+    } finally {
+      btn.classList.remove('busy'); setTimeout(() => { bar.style.width = '0'; }, 1200);
+    }
+  }
+
+  // История (локально в браузере)
+  const HK = 'clipsave_history';
+  const getH = () => { try { return JSON.parse(localStorage.getItem(HK)) || []; } catch { return []; } };
+  const setH = a => { try { localStorage.setItem(HK, JSON.stringify(a)); } catch {} };
+  function addHistory(l){ setH([l, ...getH().filter(x => x !== l)].slice(0, 5)); drawH(); }
+  function drawH(){
+    const h = getH(); $('recent').classList.toggle('show', h.length > 0);
+    $('rlist').innerHTML = h.map(l => `<div class="ritem" data-u="${esc(l)}"><i class="fa-solid fa-clock-rotate-left"></i><span>${esc(l.replace(/^https?:\/\//,''))}</span><i class="fa-solid fa-chevron-right"></i></div>`).join('');
+  }
+  $('rlist').addEventListener('click', e => {
+    const it = e.target.closest('.ritem'); if (!it) return;
+    urlIn.value = it.dataset.u; sync(); form.requestSubmit();
+  });
+  $('clearHist').onclick = () => { setH([]); drawH(); };
+  drawH();
+})();
+</script>
 </body>
 </html>
